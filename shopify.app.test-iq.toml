@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-name = "test-iq-app"
-client_id = "b66754294e2063112b95bc77011a66d4"
+name = "test-iq"
+client_id = "2b50291289d0d1ba5465c21834754a48"
 application_url = "https://shopify.dev/apps/default-app-home"
 embedded = true
 
@@ -12,8 +12,6 @@ scopes = "read_customers,read_orders,write_pixels,read_customer_events"
 [auth]
 redirect_urls = [
   "https://api4.dev.insightiq.ai/v1/store-management/oauth/shopify/callback"
-  "https://shopify.dev/apps/default-app-home/api/auth",
-  "http://localhost:9041/v1/campaign-management/api/shopify/redirect",
 ]
 
 [webhooks]
@@ -28,4 +26,4 @@ prefix = "apps"
 embedded = false
 
 [build]
-dev_store_url = "quickstart-5b8f5392.myshopify.com"
+dev_store_url = "quickstart-2f26fffa.myshopify.com"

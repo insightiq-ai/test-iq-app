@@ -83,41 +83,86 @@ const startTracking = () => {
         resolve();
     });
   };
-  const sendTracking = async () => {
-    try {
-      const response = await fetch("/apps/measure", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fingerprint: localStorage.getItem("fingerprint-insightiq"),
-          user_session_id: sessionStorage.getItem("sessionid-insightiq"),
-          demographics_info: JSON.parse(localStorage.getItem("demographics-info-insightiq")),
-          device_metadata: JSON.parse(localStorage.getItem("device-metadata-insightiq")),
-          utm_params: JSON.parse(localStorage.getItem("utm-params-insightiq")),
-          events: [
-            {
-              event_type: getEventTypeAsPerPageViewed(),
-              page_info: {
-                current_page: window.location.href,
-                referrer: document.referrer,
-              },
+
+  const sendTracking = async ({ event, fingerprint, demographics_info, device_metadata, utm_params, windowObj, documentObj, customerId }) => {
+  console.log("Event Name", event.name, fingerprint, demographics_info, device_metadata, utm_params);
+  const currentTimestampMilliseconds = new Date().getTime();
+    const currentTimestampSeconds = Math.floor(currentTimestampMilliseconds / 1000);
+    console.log(currentTimestampSeconds);
+  try {
+    const baseUrl = "https://api4.dev.insightiq.ai/v1/store-management/stores/shopify/pixel/events"
+    const url = new URL(`${baseUrl}`);
+    !isEmpty(windowObj) && url.searchParams.append("shop", windowObj.origin);
+    !isEmpty(customerId) && url.searchParams.append("logged_in_customer_id", customerId);
+    !isEmpty(event) && url.searchParams.append("timestamp", currentTimestampSeconds);
+     
+    const payload = {
+    fingerprint,
+    user_session_id: event?.clientId,
+    demographics_info,
+    device_metadata,
+    utm_params,
+    events: [
+        {
+            event_type: event.name,
+            page_info: {
+                current_page: windowObj.href,
+                referrer: documentObj.referrer,
             },
-          ],
-        }),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-  
-      const responseData = await response.json();
-      console.log(responseData);
-    } catch (error) {
-      console.error("Error:", error);
+            event_data: event
+        }
+    ]
+}
+
+    const response = await axios.post(url.href, payload);
+    console.log("response", response)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
-  };
+
+    const responseData = await response.json();
+    console.log(responseData);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
+  // const sendTracking = async () => {
+  //   console.log("tracking script called");
+  //   try {
+  //     const response = await fetch("/apps/measure", {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         fingerprint: localStorage.getItem("fingerprint-insightiq"),
+  //         user_session_id: sessionStorage.getItem("sessionid-insightiq"),
+  //         demographics_info: JSON.parse(localStorage.getItem("demographics-info-insightiq")),
+  //         device_metadata: JSON.parse(localStorage.getItem("device-metadata-insightiq")),
+  //         utm_params: JSON.parse(localStorage.getItem("utm-params-insightiq")),
+  //         events: [
+  //           {
+  //             event_type: getEventTypeAsPerPageViewed(),
+  //             page_info: {
+  //               current_page: window.location.href,
+  //               referrer: document.referrer,
+  //             },
+  //           },
+  //         ],
+  //       }),
+  //     });
+  
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! Status: ${response.status}`);
+  //     }
+  
+  //     const responseData = await response.json();
+  //     console.log(responseData);
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //   }
+  // };
   
   const verifyScript = () => {
     const url = new URL(window.location);
@@ -129,6 +174,7 @@ const startTracking = () => {
       window.close();
     }
   };
+  
   const generateFingerprint = () => {
     if (!localStorage.getItem("fingerprint-insightiq")) {
       (function () {
@@ -247,6 +293,7 @@ const startTracking = () => {
     if (pathArr[1] === "") return "landing_page_viewed";
     return pathArr[1] + "_page_viewed";
   };
+
   function loadScriptSync(src) {
     return new Promise((resolve, reject) => {
       const script = document.createElement("script");
@@ -260,4 +307,4 @@ const startTracking = () => {
       s.parentNode.insertBefore(script, s);
     });
   }
-  //startTracking().then(() => sendTracking());
+  startTracking().then(() => sendTracking());
